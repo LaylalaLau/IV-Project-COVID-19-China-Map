@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>COVID-19 Map of China</title>
+	
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://d3js.org/topojson.v0.min.js"></script>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+	
+	<link href='https://fonts.googleapis.com/css?family=Oswald:400,300,700' rel='stylesheet' type='text/css'>
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+	
+    <link href='css/style.css' rel='stylesheet' type='text/css'>
+	
+  </head>
+  <body>
+
+	<!-- Title in top left corner -->
+	<div id="titleAll">
+		<span>China COVID-19 Map with</span><span style="color: #104c91;"> Confirmed</span><span> and </span><span style="color: #f4a896;">Deaths</span><span> Cases </span>
+		<div id="rule"></div>
+	</div>
+	
+	<!-- The bigger text boxes that appear during the story -->
+	<div id="explanation" class="expl-text"></div>
+	<div id="explanationIntro" class="expl-text"></div>
+
+	<!-- all chart SVGs -->
+
+	<div id='sorting'>
+		<div class="btn-group-vertical" data-toggle="buttons">
+			<label id="UnsortButton" class="btn btn-dark active"><input type="radio" class="btn-options"> Unsort </label>
+			<label id="SortButton" class="btn btn-dark"><input type="radio" class="btn-options"> Sort </label>
+		</div>
+	</div>
+
+
+	<div id="chart"></div>
+
+	<!-- Section on the right of the screen -->
+	<div id="section">
+		<div id="sectionTitle"></div>
+		<div class="btn-group" data-toggle="buttons">
+			<label id="JanButton" class="btn btn-default active"><input type="radio" class="btn-options"> Jan </label>
+			<label id="FebButton" class="btn btn-default"><input type="radio" class="btn-options"> Feb </label>
+			<label id="MarButton" class="btn btn-default"><input type="radio" class="btn-options"> Mar </label>
+		</div>
+	</div>
+
+
+	
+	<!-- The callout that belongs to the map view in the bottom left corner -->
+	<div id="callOut">
+		<div id="callOutCity" class="callOutTitle"></div>
+		<div id="callOutrule"></div>
+		
+		<table class="fixed">
+			<colgroup>
+			   <col span="1" style="width: 30%;">
+			   <col span="1" style="width: 30%;">
+			   <col span="1" style="width: 30%;">
+			   <col span="1" style="width: 30%;">
+			</colgroup>
+	
+		  <tr>
+			<th class="th" style="padding-bottom: 4px; padding-right: 14px;"></th>
+			<th class="th" style="padding-bottom: 4px; padding-right: 14px; border-bottom: 1px solid #D1D1D1;">January</th>
+			<th class="th" style="padding-bottom: 4px; padding-right: 14px; border-bottom: 1px solid #D1D1D1;">Febuary</th>
+			<th class="th" style="padding-bottom: 4px; padding-right: 14px; border-bottom: 1px solid #D1D1D1;">March</th>
+		  </tr>
+		  <tr>
+			<td id="td-2000" style="padding-top: 3px; padding-right: 14px;"><span style="color: #f4a896; font-size:12px;">Deaths</span></td>
+			<td id="td-pop-2000" style="padding-top: 3px; padding-right: 14px;">0</td>
+			<td id="td-land-2000" style="padding-top: 3px; padding-right: 14px;">0</td>
+			<td id="td-density-2000" style="padding-top: 3px; padding-right: 14px;">0</td>
+		  </tr>
+		  <tr>
+			<td id="td-2010" style="padding-bottom: 2px; padding-top: 2px; padding-right: 14px; border-bottom: 1px solid #D1D1D1;"><span style="color:#104c91; font-size:12px;">Confirmed</span></td>
+			<td id="td-pop-2010" style="padding-bottom: 2px; padding-top: 2px; padding-right: 14px; border-bottom: 1px solid #D1D1D1;">0</td>
+			<td id="td-land-2010" style="padding-bottom: 2px; padding-top: 2px; padding-right: 14px; border-bottom: 1px solid #D1D1D1;">0</td>
+			<td id="td-density-2010" style="padding-bottom: 2px; padding-top: 2px; padding-right: 14px; border-bottom: 1px solid #D1D1D1;">0</td>
+		  </tr>
+		  <tr>
+			<td id="td-perc" style="padding-top: 2px; padding-right: 14px; font-size:10px;">Death Rate</td>
+			<td id="td-pop-perc" style="padding-top: 2px; padding-right: 14px; font-size:10px;">0%</td>
+			<td id="td-land-perc" style="padding-top: 2px; padding-right: 14px; font-size:10px;">0%</td>
+			<td id="td-density-perc" style="padding-top: 2px; padding-right: 14px; font-size:10px;">0%</td>
+		  </tr>
+		</table>		
+	
+	</div>
+	
+	
+	<!-- Buttons at the bottom -->
+	<div id="clickerWrapper">
+		<div id="progress"></div>
+		<div id="progressButtonWrapper">
+			<div id="clickerBack" class="progressButton inactiveButton">Back</div>
+			<div class="space"> </div><div class="space"> </div>
+			<div id="circle_2" class="circleBase mapView clickable"></div><div class="space"> </div>
+			<div class="space"> </div>
+			<div id="clickerFront" class="progressButton activeButton">Continue</div>
+		</div>
+	</div>
+	
+	
+	<!-- Load the data on cities and countries -->
+	<script src="js/monthly_data.js"></script>
+
+	<!-- Small function used throughout the scripts -->
+	<script src="js/helperFunctions.js"></script>
+	<!-- Bar chart created in several views to the right -->
+	<script src="js/barChart.js"></script>
+	<!-- Starting screen -->
+	<script src="js/introText.js"></script>
+	
+	<!-- Map view with cities -->
+	<script src="js/totalAreaMap.js"></script>
+
+	
+
+	<!-- Initiate the SVG and different g elements-->
+    <script type="text/javascript">
+		var width = 1000,
+			height = 710;
+				
+		var svg = d3.select("#chart").append("svg")
+				.attr("width", width)
+				.attr("height", height);
+				
+		var modus = "Map", 	//first modus is the map view (+bar chart)
+			counter = 2;	//counter is initialized
+			
+		var numFormatThree = d3.format(".3f"),
+			numFormatTwo = d3.format(".2f"),
+			numFormatOne = d3.format(".1f"),
+			numFormatSI = d3.format(".2s"),
+			numFormatPercent = d3.format(".0%"),
+			numFormatCurrency = d3.format("$,");
+
+		
+		var map = svg.append("g");
+		var confirmed = svg.append("g");
+		var deaths = svg.append("g");
+
+
+		var barChart = svg.append("g").attr("class", "barWrappingOuter");
+		var barWrappingOther = svg.append("g").attr("class", "barWrappingOther");
+
+
+		////////////////////////////////////////////////////////////	
+		///////////////////// Initiate Map /////////////////////////
+		////////////////////////////////////////////////////////////
+		//Variables for the map
+		var projection = d3.geo.mercator()
+				.scale(480)
+				.translate([-540,600]);
+		
+		var path = d3.geo.path()
+				.projection(projection);
+				
+		//Read in the china_geo polygons and initiate the plot
+		d3.json("js/china_geo.json", function(topology) {	
+			map.selectAll('.geo-path')
+				.data(topology.features)
+				.enter().append('path')
+					.attr('class', 'geo-path')
+					.attr('d', path)
+					.attr("visibility", "visible")
+					.style("stroke-opacity", 1)
+					.style("fill-opacity", 0.5);	
+		});	
+
+		////////////////////////////////////////////////////////////	
+		/////////////////// Initiate Cities ////////////////////////
+		////////////////////////////////////////////////////////////
+		//Initiate the 2010 cities as circles
+
+		confirmed.selectAll(".confirmed")
+			.data(cases)
+			.enter().append("circle")
+				.attr("class", "confirmed")
+				.style("fill-opacity", 0)
+				.style("fill","#104c91")
+				.attr("r", 0)
+				.attr("cx", function(d) {return projection([d.longitude, d.latitude])[0];})
+				.attr("cy", function(d) {return projection([d.longitude, d.latitude])[1];});
+
+		deaths.selectAll(".deaths")
+			.data(cases)
+			.enter().append("circle")
+				.attr("class", "deaths")
+				.style("fill-opacity", 0)
+				.style("fill","#f4a896")
+				.attr("r", 0)
+				.attr("cx", function(d) {return projection([d.longitude, d.latitude])[0];})
+				.attr("cy", function(d) {return projection([d.longitude, d.latitude])[1];});
+
+	
+		////////////////////////////////////////////////////////////	
+		/////////////////// Initiate Buttons ///////////////////////
+		////////////////////////////////////////////////////////////
+			
+		//Order of steps / views
+		function order() {
+
+			//Back to beginning
+			if(counter == 0) { introText(); }
+			
+			//Map View
+			if(counter == 2) { totalAreaMap(); }
+		}//order
+		
+		//Order of steps when clicking the front button
+		d3.select("#clickerFront")      
+			.on("click", function(e){
+				order();		
+			});
+		//Order of steps when clicking the back button
+		d3.select("#clickerBack")      
+			.on("click", function(e){
+				counter = counter - 2;
+				if (counter < 0) counter = 0;
+				order();
+			});	
+
+
+		//////////////// Buttons in lower right section ///////////////
+
+		//When you click the Jan button
+		d3.select("#JanButton") 
+			.on("click", function(e){
+				mVar = "Jan";
+				JanBarGraph();
+				JanMap();
+		});
+
+		//When you click the Feb button
+		d3.select("#FebButton")      
+			.on("click", function(e){	
+				mVar = "Feb";
+				FebBarGraph();
+				FebMap();
+		});
+
+		//When you click the Mar button
+		d3.select("#MarButton")      
+			.on("click", function(e){
+				mVar = "Mar";
+				MarBarGraph();
+				MarMap();
+		});
+
+		//////////////////////
+
+		d3.select("#UnsortButton") 
+			.on("click", function(e){
+				sVar = "unsort";
+				if (mVar == "Jan"){JanBarGraph();};
+				if (mVar == "Feb"){FebBarGraph();};
+				if (mVar == "Mar"){MarBarGraph();};
+		});
+
+		d3.select("#SortButton") 
+			.on("click", function(e){
+				sVar = "sort";
+				if (mVar == "Jan"){JanBarGraph();};
+				if (mVar == "Feb"){FebBarGraph();};
+				if (mVar == "Mar"){MarBarGraph();};
+		});
+
+		//Start
+		introText();
+
+    </script>
+	
+
+  </body>
+</html>
